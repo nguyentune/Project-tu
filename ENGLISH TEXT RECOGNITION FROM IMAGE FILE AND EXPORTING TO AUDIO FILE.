@@ -1,1 +1,59 @@
+import docx
+import pyttsx3
+import cv2
+from pytesseract import pytesseract
+from docx import Document
+import numpy as np
+
+path_to_tessteract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+img = cv2.imread('anh15chup.jpg')
+
+
+
+#Tiền xử lý ảnh
+
+config = ('--oem 1 --psm 3')
+img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                                             #Chuyển sang ảnh xám
+img = cv2.GaussianBlur(img, (5, 5), 0)                                                    # Làm mờ giảm nhiễu
+ret, threshimg = cv2.threshold(img, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)     # Phân ngưỡng và chuyển sang ảnh nhị phân
+cv2.imwrite('kq.png',threshimg)                                                 #Kết quả tiền xử lí được lưu vào file kq.png cùng đích 
+
+
+pytesseract.tesseract_cmd = path_to_tessteract
+text = pytesseract.image_to_string(threshimg,lang='eng')
+
+
+print(text)
+document = Document()
+document.add_paragraph(text)
+document.save('out.docx')
+
+# Chuyển từ word sang txt
+
+doc = docx.Document("out.docx")
+with open("out.txt", "w") as f:
+    for para in doc.paragraphs:
+        f.write(para.text)
+        f.write("\n")
+
+
+# Chuyển thành file mp3 từ file txt
+
+engine = pyttsx3.init()
+rate = engine.getProperty ("rate")
+
+engine.setProperty("rate", 130)
+
+txt_file = open("out.txt" ,"r")
+lines = txt_file.readlines()
+engine.save_to_file(lines, "out1.mp3")
+
+engine.runAndWait()
+
+cv2.waitKey()
+cv2.destroyAllWindows()
+
+
+
+
 
