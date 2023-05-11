@@ -1,1 +1,88 @@
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+#include <JQ6500_Serial.h>
+SoftwareSerial mySerial(4,5);
+JQ6500_Serial mp3(mySerial);
+const int cb1 = 6;
+const int cb2 = 3;
+//const int cb3 = 6;
+const int cb4 = 7;
+const int cb5 = 2;
+int sensor1Value = 0;
+int sensor2Value = 0;
+int sensor3Value = 0;
+int giatri = 0, z = 0;
+//chan 2 la chan kich may bom, chan 3 voi chan 6 la chan cam bien cho viec thong bao
+void tatled()
+{
+  digitalWrite(cb4, LOW);
+  delay(500);
+}
+void setup() {
+  pinMode(cb1, INPUT_PULLUP);
+  pinMode(cb2, INPUT_PULLUP);
+  //pinMode(cb3, INPUT_PULLUP);
+  pinMode(cb4, OUTPUT);
+ //pinMode(cb5,OUTPUT);
+  mySerial.begin(9600);
+  mp3.reset();
+  mp3.setVolume(30);
+  mp3.setLoopMode(MP3_LOOP_NONE);
+  digitalWrite(cb4, HIGH);
+  //digitalWrite(cb5,LOW);
+  pinMode(2, INPUT_PULLUP); // sử dụng điện trở kéo lên cho chân số 2, ngắt 0
+  attachInterrupt(0, tatled, LOW);
+  Serial.begin(9600);
+}
 
+void loop() {
+  sensor1Value = digitalRead(cb1);//6
+  sensor2Value = digitalRead(cb2);//3
+  sensor3Value = digitalRead(cb5);//2
+  digitalWrite(cb4, HIGH);//7
+  if (sensor3Value == LOW && giatri == 0)
+  { if (mp3.getStatus() != MP3_STATUS_PLAYING)
+    {
+      mp3.playFileByIndexNumber(3);
+    }
+    delay (1500);
+    sensor3Value == HIGH;
+    giatri = 1;
+  }
+
+  if (sensor1Value == LOW && giatri == 0)
+  {
+    if (mp3.getStatus() != MP3_STATUS_PLAYING)
+    {
+      mp3.playFileByIndexNumber(1);
+      z = 1;
+      giatri = 1;
+    }
+    if (z == 1 && giatri == 1)
+    {
+      for (int i = 0; i < 6000; i++)
+      {
+        digitalWrite(cb4, HIGH);
+        delay(1);
+      }
+    }
+    sensor1Value == HIGH;
+    giatri = 0;
+  }
+
+  if (sensor2Value == LOW && giatri == 0)
+  {
+    if (mp3.getStatus() != MP3_STATUS_PLAYING)
+    {
+      mp3.playFileByIndexNumber(2);
+    }
+    giatri = 2;
+    sensor2Value == HIGH;
+  }
+
+  if (giatri != 0)
+  {
+    delay(500);
+    giatri = 0;
+  }
+}
